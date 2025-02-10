@@ -21,6 +21,7 @@ void printStateBits(const istream& iss);
 std::vector<string> stringSplit(const string& str);
 void manipulatorFun();
 void printEndTime(const string& input);
+void testPrintEndTime();
 
 
 // During lecture, fill in this main function
@@ -30,8 +31,11 @@ void printEndTime(const string& input);
 int main() {
 
     /* Uncomment these to play with them */
-    stringToIntegerTest();
-    // bufferedExperiment();
+    // stringToIntegerTest(); // runs ok
+
+    // bufferedExperiment(std::cout); // slowly prints out cs106l
+    // bufferedExperiment(std::cerr);
+    // why they look the same?
 
     /* int a = endlEachTime();
     int b = endlAtEnd();
@@ -71,6 +75,10 @@ int main() {
 
     int number;
 
+    // example 2.1 state bits
+    printStateBits(iss);
+    // "State bits: --E-"
+
     iss >> number; // 失败！流已处于末尾，无法提取数字，number保持未初始化（实际可能为0）
     iss >> unit; // 失败！unit未被修改，仍为"Ounces"
 
@@ -91,6 +99,9 @@ int main() {
     cout << token1 << token2 << token3 << token4 << endl;
     // Types matter! Stream stops reading at any whitespace or any invalid character for the type.
 
+    manipulatorFun();
+    testPrintEndTime();
+
     return 0;
 }
 
@@ -102,14 +113,12 @@ int stringToInteger(const string& s) {
     istringstream iss(s);
 
     int result;
-    iss >> result;
-    /* if (!(iss >> result))
+    if (!(iss >> result))
         throw std::domain_error("stringToInteger: no valid integer at beginning found");
 
     char remain;
     if (iss >> remain)
         throw std::domain_error("stringToInteger: can't have characters after the int");
-    */
 
     return result;
 }
@@ -126,7 +135,6 @@ void stringToIntegerTest() {
         cout << "As an integer, this is: " << result << "\n";
         cout << "Half of that is: " << result/2 << "\n";
     }
-
 }
 
 // the purpose of this function is to
@@ -140,14 +148,14 @@ void bufferedExperiment(ostream& oss) {
     oss << "106";
     mindlessWork();
 
-    oss << flush;
-    mindlessWork();
+    // oss << flush;
+    // mindlessWork();
 
     oss << "L";
     mindlessWork();
 
     oss << endl;
-    mindlessWork();
+    // mindlessWork();
 }
 
 // This is how I feel about my classes this quarter
@@ -266,14 +274,19 @@ std::vector<string> stringSplit(const string& str) {
 
 // some fun with manipulators
 // we're not gonna spend too much time on these
-// just google them and find the one you wnat to use
+// just google them and find the one you want to use
 void manipulatorFun() {
     cout << "[" << std::setw(10) << "Ito" << "]";
     cout << "[" << std::left << std::setw(10) << "Ito" << "]";
     cout << "[" << std::left << std::setfill('-')
          << std::setw(10) << "Ito" << "]";
+    cout << endl;
 
 }
+
+// std::setw(n) 设置输出字段的宽度为  n 个字符。
+// std::left 将输出内容左对齐。与 std::setw 结合使用时，内容会靠左对齐，填充字符会出现在右侧。
+// std::setfill(c) 与 std::setw 结合使用时，填充字符会替换默认的空格
 
 // Given a start time and a duration,
 // calculate the end time.
@@ -286,9 +299,49 @@ void manipulatorFun() {
 // should print "2:00 PM", not "2:0 PM"
 // Hint: use manipulators
 void printEndTime(const string& input) {
-    // you fill this out!
+    int startHour, durHour, endHour;
+    int startMin, durMin, endMin;
+    char trashChar;
+    const string am = "AM", pm = "PM";
+    string halfDay, trashString;
+
+    istringstream iss(input);
+    iss >> startHour; iss >> trashChar;
+    iss >> startMin; iss >> halfDay;
+    iss >> durHour; iss >> trashString;
+    iss >> durMin; iss >> trashString;
+
+    // turn it into 24 hour
+    if (halfDay == pm && startHour != 12) startHour += 12;
+
+    endHour = (startHour + durHour + ((startMin+durMin) >= 60 ? 1 : 0)) %24;
+    endMin = (startMin + durMin) % 60;
+
+    if (endHour > 12) {
+        endHour -= 12;
+        halfDay = pm;
+    } else if (endHour == 12 && endMin != 0)
+        halfDay = pm;
+     else halfDay = am;
+
+    cout << endHour << ':'
+         << std::right << std::setfill('0') << std::setw(2) << to_string(endMin)
+         << ' ' << halfDay << endl;
 }
 
+void testPrintEndTime() {
+    printEndTime("1:30 PM \n 1 hour 20 minute");
+    printEndTime("1:30 PM \n 0 hour 30 minute");
+    printEndTime("11:45 PM \n 0 hour 15 minute");
+    printEndTime("11:45 AM \n 0 hour 16 minute");
+    printEndTime("12:00 AM \n 24 hour 0 minute");
+    /* should see:
+     * End time: 2:50 PM
+     * End time: 2:00 PM
+     * End time: 0:00 AM
+     * End time: 12:01 PM
+     * End time: 12:00 AM */
+}
 
 
 
