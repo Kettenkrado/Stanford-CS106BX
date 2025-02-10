@@ -343,6 +343,44 @@ void testPrintEndTime() {
      * End time: 12:00 AM */
 }
 
+void printEndTimeAI(const string& input) {
+    // Step 1: Parse input string
+    istringstream iss(input);
+    string startTime, ampm;
+    int startHour, startMinute;
+    char colon;
+    iss >> startHour >> colon >> startMinute >> ampm;
 
+    // Step 2: Convert start time to total minutes
+    int totalMinutes = startHour * 60 + startMinute;
+    if (ampm == "PM" && startHour != 12) {
+        totalMinutes += 12 * 60; // Convert PM to 24-hour format
+    }
+    if (ampm == "AM" && startHour == 12) {
+        totalMinutes -= 12 * 60; // Handle 12 AM case
+    }
 
+    // Step 3: Parse duration
+    int durationHours, durationMinutes;
+    string dummy;
+    iss >> durationHours >> dummy >> durationMinutes;
 
+    // Step 4: Calculate end time in total minutes
+    totalMinutes += durationHours * 60 + durationMinutes;
+
+    // Step 5: Convert total minutes back to HH:MM AM/PM format
+    int endHour = (totalMinutes / 60) % 24;
+    int endMinute = totalMinutes % 60;
+    string endAmPm = (endHour < 12) ? "AM" : "PM";
+
+    // Convert to 12-hour format
+    if (endHour == 0) {
+        endHour = 12; // 0:00 is 12:00 AM
+    } else if (endHour > 12) {
+        endHour -= 12;
+    }
+
+    // Step 6: Format and print the end time
+    cout << "End time: " << endHour << ":"
+         << setw(2) << setfill('0') << endMinute << " " << endAmPm << endl;
+}
